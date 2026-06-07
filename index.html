@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thanh Xuân A5 🌸</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <!-- Supabase JS SDK (ESM via CDN – dùng importmap) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- Particles background -->
+  <div class="particles" id="particles"></div>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="header-bg"></div>
+    <div class="header-inner">
+      <div class="header-badge">Class of 2023-2026</div>
+      <h1 class="logo">Thanh Xuân A5</h1>
+      <p class="tagline">Nơi lưu giữ những lời chúc & kỷ niệm đẹp nhất của lớp mình 💕</p>
+      <div class="header-stats" id="headerStats">
+        <span class="stat"><strong id="statCount">0</strong> lời chúc</span>
+      </div>
+      <button class="btn-add" id="btnOpen">
+        <span class="btn-icon">＋</span>
+        <span>Thêm lời chúc</span>
+      </button>
+    </div>
+    <!-- Deco flowers -->
+    <div class="deco d1">🌸</div>
+    <div class="deco d2">🌼</div>
+    <div class="deco d3">🌺</div>
+    <div class="deco d4">🌷</div>
+    <div class="deco d5">✿</div>
+  </header>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-inner">
+      <input class="search-box" id="searchBox" type="text" placeholder="🔍  Tìm kiếm lời chúc..." />
+      <div class="filter-tabs" id="filterTabs">
+        <button class="filter-tab active" data-filter="all">Tất cả</button>
+        <button class="filter-tab" data-filter="pink">🌸 Hồng</button>
+        <button class="filter-tab" data-filter="peach">🍑 Đào</button>
+        <button class="filter-tab" data-filter="mint">🍃 Xanh</button>
+        <button class="filter-tab" data-filter="sky">💙 Trời</button>
+        <button class="filter-tab" data-filter="lavender">💜 Tím</button>
+        <button class="filter-tab" data-filter="yellow">🌟 Vàng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gallery -->
+  <main class="gallery" id="gallery"></main>
+
+  <!-- Empty state -->
+  <div class="empty-state" id="emptyState">
+    <div class="empty-anim">🌷</div>
+    <h3>Chưa có lời chúc nào</h3>
+    <p>Hãy là người đầu tiên gửi lời chúc đến lớp 12A5 nhé!</p>
+    <button class="btn-add btn-add-empty" id="btnOpenEmpty">+ Thêm ngay</button>
+  </div>
+
+  <!-- ===== MODAL THÊM ===== -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <button class="modal-close" id="btnClose" aria-label="Đóng">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+
+      <div class="modal-header">
+        <div class="modal-icon">💌</div>
+        <h2 class="modal-title">Thêm Lời Chúc Mới</h2>
+        <p class="modal-subtitle">Ghi lại kỷ niệm đẹp của tuổi thanh xuân</p>
+      </div>
+
+      <form id="wishForm" autocomplete="off">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="sender">
+              <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg>
+              Người gửi
+            </label>
+            <input type="text" id="sender" placeholder="Tên của bạn..." required />
+          </div>
+          <div class="form-group">
+            <label for="receiver">
+              <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/></svg>
+              Gửi tới
+            </label>
+            <input type="text" id="receiver" placeholder="Lớp 12A5 / Tên bạn..." required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="message">
+            <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM5 7a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h3a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+            Lời chúc
+          </label>
+          <textarea id="message" rows="5" placeholder="Viết lời chúc từ trái tim bạn..." required></textarea>
+          <span class="char-count" id="charCount">0 / 500</span>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <svg class="label-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/></svg>
+            Ảnh / Video kỷ niệm <span class="badge-opt">tuỳ chọn</span>
+          </label>
+
+          <!-- Tab switcher -->
+          <div class="media-tabs">
+            <button type="button" class="media-tab active" id="tabPhoto" data-type="photo">
+              📷 Ảnh
+            </button>
+            <button type="button" class="media-tab" id="tabVideo" data-type="video">
+              🎬 Video
+            </button>
+          </div>
+
+          <!-- Photo upload -->
+          <div class="upload-area" id="uploadAreaPhoto">
+            <input type="file" id="photoInput" accept="image/*" />
+            <div class="upload-placeholder" id="uploadPlaceholder">
+              <div class="upload-icon-wrap">📷</div>
+              <span class="upload-hint">Kéo thả hoặc nhấn để chọn ảnh</span>
+              <span class="upload-sub">PNG, JPG, WEBP – tối đa 5MB</span>
+            </div>
+            <div class="preview-wrap hidden" id="previewWrap">
+              <img id="previewImg" src="" alt="Preview" />
+              <button type="button" class="remove-media" id="removePhoto">✕ Xoá ảnh</button>
+            </div>
+          </div>
+
+          <!-- Video upload -->
+          <div class="upload-area hidden" id="uploadAreaVideo">
+            <input type="file" id="videoInput" accept="video/*" />
+            <div class="upload-placeholder" id="videoPlaceholder">
+              <div class="upload-icon-wrap">🎬</div>
+              <span class="upload-hint">Kéo thả hoặc nhấn để chọn video</span>
+              <span class="upload-sub">MP4, MOV, WEBM – tối đa 80MB</span>
+            </div>
+            <div class="preview-wrap hidden" id="videoPreviewWrap">
+              <video id="previewVideo" controls playsinline></video>
+              <button type="button" class="remove-media" id="removeVideo">✕ Xoá video</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>🎨 Màu nền thiệp</label>
+          <div class="color-swatches" id="colorSwatches">
+            <label class="swatch-label" title="Hồng">
+              <input type="radio" name="cardColor" value="pink" checked />
+              <span class="swatch pink-swatch"></span>
+              <span class="swatch-name">Hồng</span>
+            </label>
+            <label class="swatch-label" title="Đào">
+              <input type="radio" name="cardColor" value="peach" />
+              <span class="swatch peach-swatch"></span>
+              <span class="swatch-name">Đào</span>
+            </label>
+            <label class="swatch-label" title="Xanh Mint">
+              <input type="radio" name="cardColor" value="mint" />
+              <span class="swatch mint-swatch"></span>
+              <span class="swatch-name">Xanh</span>
+            </label>
+            <label class="swatch-label" title="Xanh Trời">
+              <input type="radio" name="cardColor" value="sky" />
+              <span class="swatch sky-swatch"></span>
+              <span class="swatch-name">Trời</span>
+            </label>
+            <label class="swatch-label" title="Tím Lavender">
+              <input type="radio" name="cardColor" value="lavender" />
+              <span class="swatch lavender-swatch"></span>
+              <span class="swatch-name">Tím</span>
+            </label>
+            <label class="swatch-label" title="Vàng">
+              <input type="radio" name="cardColor" value="yellow" />
+              <span class="swatch yellow-swatch"></span>
+              <span class="swatch-name">Vàng</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" id="btnCancelForm">Huỷ</button>
+          <button type="submit" class="btn-submit">
+            <span>💌</span> Lưu Lời Chúc
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== MODAL XEM CHI TIẾT ===== -->
+  <div class="modal-overlay" id="viewOverlay">
+    <div class="modal view-modal" id="viewModal">
+      <button class="modal-close" id="btnViewClose" aria-label="Đóng">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <div id="viewContent"></div>
+      <div class="view-actions">
+        <button class="btn-delete-view" id="btnDelete">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="16"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+          Xoá lời chúc
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Supabase config (điền URL + key vào file này) -->
+  <script src="supabase.config.js"></script>
+  <!-- App (ES module để dùng import) -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
