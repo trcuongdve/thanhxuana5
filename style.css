@@ -1006,6 +1006,31 @@ body {
   transform: translateX(-50%) translateY(0);
 }
 
+/* Syncing badge on optimistic card */
+.card-syncing {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(80,30,60,0.55);
+  pointer-events: none;
+}
+.syncing-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #ff8fab;
+  animation: syncPulse 1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes syncPulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.3; transform: scale(0.7); }
+}
+
 /* ========================================
    SKELETON LOADER
 ======================================== */

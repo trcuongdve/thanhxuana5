@@ -100,11 +100,6 @@ function showToast(msg, type = 'info', duration = 3000) {
   _toastTimer = setTimeout(() => toastEl.classList.remove('show'), duration);
 }
 
-function setLoading(btn, loading, text) {
-  btn.disabled = loading;
-  btn.textContent = loading ? '⏳ Đang xử lý…' : text;
-}
-
 function fmtSize(bytes) {
   return bytes < 1048576
     ? (bytes / 1024).toFixed(0) + ' KB'
@@ -246,7 +241,7 @@ async function deleteFile(url, bucket) {
   }
 }
 
-// ── Submit form ───────────────────────────────────────────
+// ── Submit form  (optimistic update) ─────────────────────
 const submitBtn = wishForm.querySelector('.btn-submit');
 
 wishForm.addEventListener('submit', async e => {
@@ -260,23 +255,42 @@ wishForm.addEventListener('submit', async e => {
   if (!sender || !receiver || !message) return;
   if (message.length > 500) { showToast('⚠ Lời chúc tối đa 500 ký tự!', 'warn'); return; }
 
-  setLoading(submitBtn, true, '💌 Lưu Lời Chúc');
+  // ── 1. Tạo preview URL cục bộ để hiển thị ngay ──────────
+  const localPhotoUrl = (mediaType === 'photo' && photoFile)
+    ? URL.createObjectURL(photoFile) : null;
+  const localVideoUrl = (mediaType === 'video' && videoFile)
+    ? URL.createObjectURL(videoFile) : null;
 
+  // ── 2. Tạo object tạm với id giả ────────────────────────
+  const tempId = '_tmp_' + Date.now();
+  const tempWish = {
+    id: tempId,
+    sender, receiver, message, color,
+    photo_url: localPhotoUrl,
+    video_url: localVideoUrl,
+    created_at: new Date().toISOString(),
+    _uploading: true,   // đang upload ngầm
+  };
+
+  // ── 3. Đưa lên UI ngay lập tức ──────────────────────────
+  wishes.unshift(tempWish);
+  renderGallery();
+  modalOverlay.classList.remove('open');
+  showToast('💌 Đã lưu! Đang đồng bộ lên server…', 'info');
+
+  // ── 4. Upload ngầm ───────────────────────────────────────
   try {
     let photo_url = null;
     let video_url = null;
 
-    // Upload media first
     if (mediaType === 'photo' && photoFile) {
-      showToast('📤 Đang tải ảnh lên…', 'info', 60000);
       photo_url = await uploadFile(photoFile, PHOTO_BUCKET);
     }
     if (mediaType === 'video' && videoFile) {
-      showToast('📤 Đang tải video lên… (có thể mất vài giây)', 'info', 60000);
       video_url = await uploadFile(videoFile, VIDEO_BUCKET);
     }
 
-    // Insert row
+    // Insert vào DB
     const { data, error } = await supabase
       .from('wishes')
       .insert([{ sender, receiver, message, color, photo_url, video_url }])
@@ -285,16 +299,28 @@ wishForm.addEventListener('submit', async e => {
 
     if (error) throw error;
 
-    wishes.unshift(data);
+    // ── 5. Thay thế item tạm bằng data thật từ DB ─────────
+    const idx = wishes.findIndex(w => w.id === tempId);
+    if (idx !== -1) wishes[idx] = data;
+    else wishes.unshift(data);
+
+    // Giải phóng object URL cục bộ
+    if (localPhotoUrl) URL.revokeObjectURL(localPhotoUrl);
+    if (localVideoUrl) URL.revokeObjectURL(localVideoUrl);
+
     renderGallery();
-    modalOverlay.classList.remove('open');
-    showToast('💌 Đã lưu lời chúc thành công!', 'success');
+    showToast('✅ Đồng bộ hoàn tất!', 'success');
 
   } catch (err) {
     console.error('Submit error:', err);
-    showToast('❌ Lỗi: ' + (err.message || 'Thử lại nhé!'), 'error');
-  } finally {
-    setLoading(submitBtn, false, '💌 Lưu Lời Chúc');
+
+    // Rollback: xoá item tạm khỏi UI
+    wishes = wishes.filter(w => w.id !== tempId);
+    if (localPhotoUrl) URL.revokeObjectURL(localPhotoUrl);
+    if (localVideoUrl) URL.revokeObjectURL(localVideoUrl);
+    renderGallery();
+
+    showToast('❌ Lỗi đồng bộ: ' + (err.message || 'Thử lại nhé!'), 'error');
   }
 });
 
@@ -448,7 +474,9 @@ function renderGallery() {
           </div>
           <div class="card-date">${fmt(w.created_at)}</div>
         </div>
-      </div>`;
+      </div>
+      ${w._uploading ? '<div class="card-syncing"><span class="syncing-dot"></span> Đang đồng bộ…</div>' : ''}
+    `;
 
     card.addEventListener('click', e => {
       if (e.target.closest('.card-delete-btn')) return;
