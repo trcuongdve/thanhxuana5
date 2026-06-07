@@ -248,11 +248,11 @@ wishForm.addEventListener('submit', async e => {
   e.preventDefault();
 
   const sender   = document.getElementById('sender').value.trim();
-  const receiver = document.getElementById('receiver').value.trim();
+  const receiver = 'Lớp 12A5';
   const message  = document.getElementById('message').value.trim();
   const color    = document.querySelector('input[name="cardColor"]:checked')?.value || 'pink';
 
-  if (!sender || !receiver || !message) return;
+  if (!sender) return;
   if (message.length > 500) { showToast('⚠ Lời chúc tối đa 500 ký tự!', 'warn'); return; }
 
   // ── 1. Tạo preview URL cục bộ để hiển thị ngay ──────────
@@ -465,7 +465,6 @@ function renderGallery() {
       </button>
       ${mediaHtml}
       <div class="card-body">
-        <div class="card-tag">✉ Gửi tới · ${esc(w.receiver)}</div>
         <div class="card-message">${esc(w.message)}</div>
         <div class="card-footer">
           <div class="card-sender">
@@ -531,8 +530,6 @@ function openView(id) {
   document.getElementById('viewContent').innerHTML = `
     ${mediaHtml}
     <div class="view-body">
-      <div class="view-to-tag">✉ Gửi tới</div>
-      <div class="view-receiver">${esc(w.receiver)}</div>
       <span class="view-quote-mark">"</span>
       <div class="view-message">${esc(w.message)}"</div>
     </div>
